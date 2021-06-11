@@ -22,10 +22,10 @@ func init() {
 	api.Execute(db, "use databasego")
 	api.Execute(db, "drop table if exists usuarios")
 	api.Execute(db, `create table usuarios (
-	id integer auto_increment,
-	nome varchar(100),
-	email varchar (80),
-	PRIMARY KEY (id)
+		id integer auto_increment,
+		nome varchar(100),
+		email varchar (80),
+		PRIMARY KEY (id)
 	)`)
 
 	// Inicializa a tabela "usuarios" com alguns registros

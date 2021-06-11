@@ -92,7 +92,7 @@ func editarUsuarioRepo(usuario Usuario) (status int) {
 	}
 	rows, _ := result.RowsAffected()
 	if rows == 1 {
-		status = 201
+		status = 200
 	} else {
 		status = 404
 	}
