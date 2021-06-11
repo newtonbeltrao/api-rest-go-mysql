@@ -22,7 +22,7 @@ Simples API REST feita em Golang usando banco de dados MySql
 # Endpoints - Para testar os serviços recomedo usar o Postman
 
 	// Listar todos os usuários
-	// http://localhost:8080/api/selecionar (GET)
+	// http://localhost:8080/api/listar (GET)
 	
 	// Selecionar usuário por id
 	// http://localhost:8080/api/selecionar?id=1 (GET)

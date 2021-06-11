@@ -3,70 +3,112 @@ package api
 import (
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"net/http"
+	"reflect"
+	"strconv"
 )
 
-func codificarResposta(w http.ResponseWriter, response interface{}, codHttp int) {
+func codificarHeader(w http.ResponseWriter, codHttp int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(codHttp)
-	json.NewEncoder(w).Encode(response)
 }
 
-func codificarNotFound(w http.ResponseWriter) {
-	w.WriteHeader(http.StatusNotFound)
-	w.Write([]byte(`{"message": "not found"}`))
-}
-
-func recuperarBody(r *http.Request) Usuario {
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		log.Fatal(err)
+func codificarRetorno(w http.ResponseWriter, response interface{}, codHttp int) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(codHttp)
+	if !responseVazio(response) {
+		json.NewEncoder(w).Encode(response)
 	}
-	var usuario Usuario
-	json.Unmarshal(body, &usuario)
-	return usuario
 }
 
+func responseVazio(response interface{}) (b bool) {
+	b = false
+	if reflect.ValueOf(response).IsZero() {
+		b = true
+	}
+	return
+}
+
+func recuperarId(r *http.Request) (id string, err error) {
+	id = r.URL.Query().Get("id")
+	if id != "" {
+		_, err = strconv.Atoi(id)
+	}
+	return id, err
+}
+
+func recuperarBody(r *http.Request) (usuario Usuario, err error) {
+	body, err := ioutil.ReadAll(r.Body)
+	json.Unmarshal(body, &usuario)
+	return usuario, err
+}
+
+// ListarUsuarios recebe uma requisição GET e retorna um usuário pelo Id ou todos os usuários
 func ListarUsuarios(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
-		id := r.URL.Query().Get("id")
-		var response interface{}
-		if id != "" {
-			response = selecionarUsuarioRepo(id)
-		} else {
-			response = listarUsuariosRepo()
-		}
-		codificarResposta(w, response, http.StatusOK)
+		response, status := listarUsuariosRepo()
+		codificarRetorno(w, response, status)
 	} else {
-		codificarNotFound(w)
+		codificarHeader(w, http.StatusMethodNotAllowed)
 	}
 }
 
+// SelecionarUsuarios recebe uma requisição GET e retorna a lista com todos os usuários
+func SelecionarUsuarios(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		id, err := recuperarId(r)
+		if err != nil || id == "" {
+			codificarHeader(w, http.StatusBadRequest)
+			return
+		}
+		response, status := selecionarUsuarioRepo(id)
+		codificarRetorno(w, response, status)
+	} else {
+		codificarHeader(w, http.StatusMethodNotAllowed)
+	}
+}
+
+// CadastrarUsuario recebe uma requisição POST e cadastra um usuário enviado no corpo da requisição
 func CadastrarUsuario(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
-		response := cadastrarUsuarioRepo(recuperarBody(r))
-		codificarResposta(w, response, http.StatusCreated)
+		body, err := recuperarBody(r)
+		if err != nil {
+			codificarHeader(w, http.StatusBadRequest)
+			return
+		}
+		status := cadastrarUsuarioRepo(body)
+		codificarHeader(w, status)
 	} else {
-		codificarNotFound(w)
+		codificarHeader(w, http.StatusMethodNotAllowed)
 	}
 }
 
+// EditarUsuario recebe uma requisição PUT e edita um usuário enviado no corpo da requisição
 func EditarUsuario(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "PUT" {
-		response := editarUsuarioRepo(recuperarBody(r))
-		codificarResposta(w, response, http.StatusAccepted)
+		body, err := recuperarBody(r)
+		if err != nil {
+			codificarHeader(w, http.StatusBadRequest)
+			return
+		}
+		status := editarUsuarioRepo(body)
+		codificarHeader(w, status)
 	} else {
-		codificarNotFound(w)
+		codificarHeader(w, http.StatusMethodNotAllowed)
 	}
 }
 
+// DeletarUsuario recebe uma requisição DELETE e apaga um usuário pelo Id
 func DeletarUsuario(w http.ResponseWriter, r *http.Request) {
-	id := r.URL.Query().Get("id")
-	if r.Method == "DELETE" && id != "" {
-		response := deletarUsuarioRepo(id)
-		codificarResposta(w, response, http.StatusOK)
+	if r.Method == "DELETE" {
+		id, err := recuperarId(r)
+		if err != nil || id == "" {
+			codificarHeader(w, http.StatusBadRequest)
+			return
+		}
+		status := deletarUsuarioRepo(id)
+		codificarHeader(w, status)
 	} else {
-		codificarNotFound(w)
+		codificarHeader(w, http.StatusMethodNotAllowed)
 	}
 }

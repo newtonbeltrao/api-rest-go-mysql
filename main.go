@@ -22,11 +22,11 @@ func init() {
 	api.Execute(db, "use databasego")
 	api.Execute(db, "drop table if exists usuarios")
 	api.Execute(db, `create table usuarios (
-		id integer auto_increment,
-		nome varchar(100),
-		email varchar (80),
-		PRIMARY KEY (id)
-		)`)
+	id integer auto_increment,
+	nome varchar(100),
+	email varchar (80),
+	PRIMARY KEY (id)
+	)`)
 
 	// Inicializa a tabela "usuarios" com alguns registros
 	stmt, _ := db.Prepare("insert into usuarios (nome, email) values (?, ?)")
@@ -38,8 +38,9 @@ func init() {
 func main() {
 	fmt.Println("Servidor está rodando na porta 8080...")
 
-	http.HandleFunc("/api/selecionar", api.ListarUsuarios)
-	//endpoint: http://localhost:8080/api/selecionar (GET)
+	http.HandleFunc("/api/listar", api.ListarUsuarios)
+	//endpoint: http://localhost:8080/api/listar (GET)
+	http.HandleFunc("/api/selecionar", api.SelecionarUsuarios)
 	//endpoint: http://localhost:8080/api/selecionar?id=1 (GET)
 	http.HandleFunc("/api/cadastrar", api.CadastrarUsuario)
 	//endpoint: http://localhost:8080/api/cadastrar (POST)
