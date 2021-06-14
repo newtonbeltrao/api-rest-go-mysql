@@ -11,15 +11,15 @@ Simples API REST feita em Golang usando banco de dados MySql
 
 2 - Instalar o driver mysql;
 
-	// no terminal do GO:
+	// no terminal do projeto Go:
 	go get -u github.com/go-sql-driver/mysql
 	
 # Executar a aplicação:
 
-	// no terminal do Go:
+	// no terminal do projeto Go:
 	go run main.go
 	
-# Endpoints - Para testar os serviços recomedo usar o Postman
+# Endpoints - Para testar os serviços recomedo usar o Postman:
 
 	// Listar todos os usuários
 	// http://localhost:8080/api/listar (GET)

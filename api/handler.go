@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"reflect"
@@ -9,26 +10,32 @@ import (
 )
 
 func codificarHeader(w http.ResponseWriter, codHttp int) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(codHttp)
+	if codHttp == 200 || codHttp == 201 {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(codHttp)
+	} else {
+		w.WriteHeader(codHttp)
+		w.Write([]byte(fmt.Sprintf("%d %s\n", codHttp, http.StatusText(codHttp))))
+	}
 }
 
-func codificarRetorno(w http.ResponseWriter, response interface{}, codHttp int) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(codHttp)
-	if !responseVazio(response) {
+// codificarRetorno codifica a resposta e o código http para retornar ao browser
+func codificarRetorno(w http.ResponseWriter, r *http.Request, response interface{}, erro error) {
+	if erro != nil {
+		codificarHeader(w, http.StatusInternalServerError)
+	} else if reflect.ValueOf(response).IsZero() {
+		codificarHeader(w, http.StatusNotFound)
+	} else if r.Method == http.MethodPost {
+		codificarHeader(w, http.StatusCreated)
+	} else if r.Method == http.MethodPut || r.Method == http.MethodDelete {
+		codificarHeader(w, http.StatusOK)
+	} else if r.Method == http.MethodGet {
+		codificarHeader(w, http.StatusOK)
 		json.NewEncoder(w).Encode(response)
 	}
 }
 
-func responseVazio(response interface{}) (b bool) {
-	b = false
-	if reflect.ValueOf(response).IsZero() {
-		b = true
-	}
-	return
-}
-
+// recuperarId retorna se o id é um número válido
 func recuperarId(r *http.Request) (id string, err error) {
 	id = r.URL.Query().Get("id")
 	if id != "" {
@@ -37,6 +44,7 @@ func recuperarId(r *http.Request) (id string, err error) {
 	return id, err
 }
 
+// recuperarBody retorna se o corpo da requisição é válida
 func recuperarBody(r *http.Request) (usuario Usuario, err error) {
 	body, err := ioutil.ReadAll(r.Body)
 	json.Unmarshal(body, &usuario)
@@ -45,17 +53,17 @@ func recuperarBody(r *http.Request) (usuario Usuario, err error) {
 
 // ListarUsuarios recebe uma requisição GET e retorna um usuário pelo Id ou todos os usuários
 func ListarUsuarios(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "GET" {
+	if r.Method != http.MethodGet {
 		codificarHeader(w, http.StatusMethodNotAllowed)
 		return
 	}
-	response, status := listarUsuariosRepo()
-	codificarRetorno(w, response, status)
+	response, erro := listarUsuariosRepo()
+	codificarRetorno(w, r, response, erro)
 }
 
 // SelecionarUsuarios recebe uma requisição GET e retorna a lista com todos os usuários
 func SelecionarUsuarios(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "GET" {
+	if r.Method != http.MethodGet {
 		codificarHeader(w, http.StatusMethodNotAllowed)
 		return
 	}
@@ -64,13 +72,13 @@ func SelecionarUsuarios(w http.ResponseWriter, r *http.Request) {
 		codificarHeader(w, http.StatusBadRequest)
 		return
 	}
-	response, status := selecionarUsuarioRepo(id)
-	codificarRetorno(w, response, status)
+	response, erro := selecionarUsuarioRepo(id)
+	codificarRetorno(w, r, response, erro)
 }
 
 // CadastrarUsuario recebe uma requisição POST e cadastra um usuário enviado no corpo da requisição
 func CadastrarUsuario(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
+	if r.Method != http.MethodPost {
 		codificarHeader(w, http.StatusMethodNotAllowed)
 		return
 	}
@@ -79,13 +87,13 @@ func CadastrarUsuario(w http.ResponseWriter, r *http.Request) {
 		codificarHeader(w, http.StatusBadRequest)
 		return
 	}
-	status := cadastrarUsuarioRepo(body)
-	codificarHeader(w, status)
+	response, erro := cadastrarUsuarioRepo(body)
+	codificarRetorno(w, r, response, erro)
 }
 
 // EditarUsuario recebe uma requisição PUT e edita um usuário enviado no corpo da requisição
 func EditarUsuario(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "PUT" {
+	if r.Method != http.MethodPut {
 		codificarHeader(w, http.StatusMethodNotAllowed)
 		return
 	}
@@ -94,13 +102,13 @@ func EditarUsuario(w http.ResponseWriter, r *http.Request) {
 		codificarHeader(w, http.StatusBadRequest)
 		return
 	}
-	status := editarUsuarioRepo(body)
-	codificarHeader(w, status)
+	response, erro := editarUsuarioRepo(body)
+	codificarRetorno(w, r, response, erro)
 }
 
 // DeletarUsuario recebe uma requisição DELETE e apaga um usuário pelo Id
 func DeletarUsuario(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "DELETE" {
+	if r.Method != http.MethodDelete {
 		codificarHeader(w, http.StatusMethodNotAllowed)
 		return
 	}
@@ -109,6 +117,6 @@ func DeletarUsuario(w http.ResponseWriter, r *http.Request) {
 		codificarHeader(w, http.StatusBadRequest)
 		return
 	}
-	status := deletarUsuarioRepo(id)
-	codificarHeader(w, status)
+	response, erro := deletarUsuarioRepo(id)
+	codificarRetorno(w, r, response, erro)
 }

@@ -3,8 +3,16 @@ package api
 import (
 	"database/sql"
 	"log"
-	"reflect"
 )
+
+// conectarBanco abre e retorna uma conexão com o banco de dados
+func conectarBanco() (db *sql.DB) {
+	db, err := sql.Open("mysql", "user:123456@/databasego")
+	if err != nil {
+		log.Fatal(err)
+	}
+	return db
+}
 
 // execute executa uma query e retorna um Result
 func Execute(db *sql.DB, sql string) sql.Result {
@@ -16,15 +24,12 @@ func Execute(db *sql.DB, sql string) sql.Result {
 }
 
 // listarUsuariosRepo retorna a lista com todos os usuários
-func listarUsuariosRepo() (retorno []Usuario, status int) {
-	db, err := sql.Open("mysql", "user:123456@/databasego")
-	if err != nil {
-		log.Fatal(err)
-	}
+func listarUsuariosRepo() (retorno []Usuario, erro error) {
+	db := conectarBanco()
 	defer db.Close()
-	rows, err := db.Query("select id, nome, email from usuarios")
-	if err != nil {
-		log.Fatal(err)
+	rows, erro := db.Query("select id, nome, email from usuarios")
+	if erro != nil {
+		return nil, erro
 	}
 	defer rows.Close()
 	var u Usuario
@@ -32,90 +37,70 @@ func listarUsuariosRepo() (retorno []Usuario, status int) {
 		rows.Scan(&u.Id, &u.Nome, &u.Email)
 		retorno = append(retorno, u)
 	}
-	if reflect.ValueOf(retorno).IsZero() {
-		status = 404
-	} else {
-		status = 200
-	}
-	return retorno, status
+	return retorno, erro
 }
 
 // selecionarUsuarioRepo retorna o usuário selecionado
-func selecionarUsuarioRepo(id string) (retorno Usuario, status int) {
-	db, err := sql.Open("mysql", "user:123456@/databasego")
-	if err != nil {
-		log.Fatal(err)
-	}
+func selecionarUsuarioRepo(id string) (response Usuario, erro error) {
+	db := conectarBanco()
 	defer db.Close()
-	db.QueryRow("select id, nome, email from usuarios  where id = ?", id).
-		Scan(&retorno.Id, &retorno.Nome, &retorno.Email)
-	if reflect.ValueOf(retorno).IsZero() {
-		status = 404
-	} else {
-		status = 200
+	erro = db.QueryRow("select id, nome, email from usuarios  where id = ?", id).Scan(&response.Id, &response.Nome, &response.Email)
+	if erro == sql.ErrNoRows {
+		return response, nil
 	}
-	return retorno, status
+	return response, erro
 }
 
 // cadastrarUsuarioRepo insere um novo usuário e retorna a nova lista de usuários
-func cadastrarUsuarioRepo(usuario Usuario) (status int) {
-	db, err := sql.Open("mysql", "user:123456@/databasego")
-	if err != nil {
-		log.Fatal(err)
-	}
+func cadastrarUsuarioRepo(usuario Usuario) (response int64, erro error) {
+	db := conectarBanco()
 	defer db.Close()
-	stmt, _ := db.Prepare("insert into usuarios (nome, email) values (?, ?)")
+	stmt, err := db.Prepare("insert into usuarios (nome, email) values (?, ?)")
+	if err != nil {
+		return 0, err
+	}
 	result, err := stmt.Exec(usuario.Nome, usuario.Email)
 	if err != nil {
-		log.Fatal(err)
+		return 0, err
 	}
-	rows, _ := result.RowsAffected()
-	if rows == 1 {
-		status = 201
-	} else {
-		status = 400
-	}
-	return status
+	response, _ = result.RowsAffected()
+	return response, erro
 }
 
 // editarUsuarioRepo edita o registro de um usuário e retorna a lista de usuários
-func editarUsuarioRepo(usuario Usuario) (status int) {
-	db, err := sql.Open("mysql", "user:123456@/databasego")
-	if err != nil {
-		log.Fatal(err)
-	}
+func editarUsuarioRepo(usuario Usuario) (response int64, erro error) {
+	db := conectarBanco()
 	defer db.Close()
-	stmt, _ := db.Prepare("update usuarios set nome = ?, email = ? where id = ?")
+	stmt, err := db.Prepare("update usuarios set nome = ?, email = ? where id = ?")
+	if err != nil {
+		return 0, err
+	}
 	result, err := stmt.Exec(usuario.Nome, usuario.Email, usuario.Id)
 	if err != nil {
-		log.Fatal(err)
+		return 0, err
 	}
-	rows, _ := result.RowsAffected()
-	if rows == 1 {
-		status = 200
-	} else {
-		status = 404
+	response, err = result.RowsAffected()
+	if err != nil {
+		return 0, err
 	}
-	return status
+	return response, erro
 }
 
 // deletarUsuarioRepo deleta o usuário selecionado e retorna a lista de usuários restantes
-func deletarUsuarioRepo(id string) (status int) {
-	db, err := sql.Open("mysql", "user:123456@/databasego")
-	if err != nil {
-		log.Fatal(err)
-	}
+func deletarUsuarioRepo(id string) (response int64, erro error) {
+	db := conectarBanco()
 	defer db.Close()
-	stmt, _ := db.Prepare("delete from usuarios  where id = ?")
+	stmt, err := db.Prepare("delete from usuarios  where id = ?")
+	if err != nil {
+		return 0, err
+	}
 	result, err := stmt.Exec(id)
 	if err != nil {
-		log.Fatal(err)
+		return 0, err
 	}
-	rows, _ := result.RowsAffected()
-	if rows == 1 {
-		status = 200
-	} else {
-		status = 404
+	response, err = result.RowsAffected()
+	if err != nil {
+		return 0, err
 	}
-	return status
+	return response, erro
 }
