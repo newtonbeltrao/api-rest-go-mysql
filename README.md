@@ -1,5 +1,5 @@
 # api-rest-go-mysql
-Simples API REST feita em Golang usando banco de dados MySql
+Simples API REST feita em Golang usando a biblioteca padrão e banco de dados MySql
 
 # Pre-requisitos:
 
@@ -22,16 +22,16 @@ Simples API REST feita em Golang usando banco de dados MySql
 # Endpoints - Para testar os serviços recomedo usar o Postman:
 
 	// Listar todos os usuários
-	// http://localhost:8080/api/listar (GET)
+	// http://localhost:8080/api/usuarios (GET)
 	
 	// Selecionar usuário por id
-	// http://localhost:8080/api/selecionar?id=1 (GET)
+	// http://localhost:8080/api/usuarios/selecione?id=1 (GET)
 
 	// Cadastrar um novo usuário
-	// http://localhost:8080/api/cadastrar (POST)
+	// http://localhost:8080/api/usuarios/cadastro (POST)
 
 	// Editar um usuário existente
-	// http://localhost:8080/api/editar (PUT)
+	// http://localhost:8080/api/usuarios/edicao (PUT)
 	
 	// Deletar usuário por id
-	// http://localhost:8080/api/deletar?id=1 (DELETE)
+	// http://localhost:8080/api/usuarios/delecao?id=1 (DELETE)

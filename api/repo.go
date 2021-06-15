@@ -23,7 +23,7 @@ func Execute(db *sql.DB, sql string) sql.Result {
 	return result
 }
 
-// listarUsuariosRepo retorna a lista com todos os usuários
+// listarUsuariosRepo retorna a lista com todos os usuários e um erro
 func listarUsuariosRepo() (retorno []Usuario, erro error) {
 	db := conectarBanco()
 	defer db.Close()
@@ -40,7 +40,7 @@ func listarUsuariosRepo() (retorno []Usuario, erro error) {
 	return retorno, erro
 }
 
-// selecionarUsuarioRepo retorna o usuário selecionado
+// selecionarUsuarioRepo retorna o usuário selecionado e um erro
 func selecionarUsuarioRepo(id string) (response Usuario, erro error) {
 	db := conectarBanco()
 	defer db.Close()
@@ -51,7 +51,7 @@ func selecionarUsuarioRepo(id string) (response Usuario, erro error) {
 	return response, erro
 }
 
-// cadastrarUsuarioRepo insere um novo usuário e retorna a nova lista de usuários
+// cadastrarUsuarioRepo insere um usuário e retorna a quantidade de registros inseridos e um erro
 func cadastrarUsuarioRepo(usuario Usuario) (response int64, erro error) {
 	db := conectarBanco()
 	defer db.Close()
@@ -63,11 +63,14 @@ func cadastrarUsuarioRepo(usuario Usuario) (response int64, erro error) {
 	if err != nil {
 		return 0, err
 	}
-	response, _ = result.RowsAffected()
+	response, err = result.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
 	return response, erro
 }
 
-// editarUsuarioRepo edita o registro de um usuário e retorna a lista de usuários
+// editarUsuarioRepo edita o registro de um usuário e retorna a quantidade de registros editados e um erro
 func editarUsuarioRepo(usuario Usuario) (response int64, erro error) {
 	db := conectarBanco()
 	defer db.Close()
@@ -86,7 +89,7 @@ func editarUsuarioRepo(usuario Usuario) (response int64, erro error) {
 	return response, erro
 }
 
-// deletarUsuarioRepo deleta o usuário selecionado e retorna a lista de usuários restantes
+// deletarUsuarioRepo deleta o usuário selecionado e retorna a quantidade de registros deletados e um erro
 func deletarUsuarioRepo(id string) (response int64, erro error) {
 	db := conectarBanco()
 	defer db.Close()
