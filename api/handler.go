@@ -22,9 +22,7 @@ func codificarHeader(w http.ResponseWriter, r *http.Request, codHttp int) {
 
 // codificarRetorno codifica a resposta e o header para retornar ao browser
 func codificarRetorno(w http.ResponseWriter, r *http.Request, response interface{}, erro error) {
-	if erro != nil {
-		codificarHeader(w, r, http.StatusInternalServerError)
-	} else if reflect.ValueOf(response).IsZero() {
+	if reflect.ValueOf(response).IsZero() {
 		codificarHeader(w, r, http.StatusNoContent)
 	} else if r.Method == http.MethodPost {
 		codificarHeader(w, r, http.StatusCreated)

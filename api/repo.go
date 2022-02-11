@@ -7,20 +7,11 @@ import (
 
 // conectarBanco abre e retorna uma conexão com o banco de dados
 func conectarBanco() (db *sql.DB) {
-	db, err := sql.Open("mysql", "user:123456@/databasego")
+	db, err := sql.Open("mysql", "user:123456@tcp(db:3306)/databasego?charset=latin1")
 	if err != nil {
 		log.Fatal(err)
 	}
 	return db
-}
-
-// execute executa uma query e retorna um Result
-func Execute(db *sql.DB, sql string) sql.Result {
-	result, err := db.Exec(sql)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return result
 }
 
 // listarUsuariosRepo retorna a lista com todos os usuários e um erro
@@ -31,7 +22,8 @@ func listarUsuariosRepo() (retorno []Usuario, erro error) {
 	if erro != nil {
 		return nil, erro
 	}
-	defer rows.Close()
+	defer rows.Close()		
+
 	var u Usuario
 	for rows.Next() {
 		rows.Scan(&u.Id, &u.Nome, &u.Email)

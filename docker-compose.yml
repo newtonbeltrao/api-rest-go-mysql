@@ -1,0 +1,39 @@
+# Compose que comanda o container do banco Mysql e o app Golang
+version: '3.8'
+services:
+    db:
+        container_name: db-mysql-container
+        build: 
+            context: .
+            dockerfile: ./docker/db/Dockerfile
+        ports:
+            - 3306:3306
+        restart: always
+        env_file:
+            - ./docker/db/mysql.env    
+        volumes: 
+            - db-mysql-volume:/var/lib/mysql
+        networks:
+            db-mysql-network:    
+
+    app:
+        container_name: api-go-container
+        build:
+            context: .
+            dockerfile: ./docker/app/Dockerfile
+        restart: always
+        ports:
+            - 8080:8080  
+        volumes:
+            - app-volume:/usr/src/app/    
+        networks:
+            db-mysql-network:
+        depends_on:  
+            - db            
+
+volumes: 
+    db-mysql-volume:
+    app-volume:
+
+networks:
+    db-mysql-network:          
